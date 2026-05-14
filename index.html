@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מדד העמדות</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    // *** הדבק כאן את ה-config שלך מ-Firebase Console ***
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    window._db   = getFirestore(app);
+    window._auth = getAuth(app);
+    window._fsLib = { collection, addDoc, onSnapshot };
+    window._authLib = { signInAnonymously, onAuthStateChanged };
+    window._firebaseReady = true;
+    window.dispatchEvent(new Event("firebaseReady"));
+  </script>
+</head>
+<body class="bg-gray-50">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const SESSION = 'unit1-ai-responsibility';
+    const LABELS  = { 1:'מתנגד/ת בתוקף', 2:'מתנגד/ת', 3:'ניטרלי/ת', 4:'מסכים/ה', 5:'מסכים/ה לחלוטין' };
+
+    function App() {
+      const [ready, setReady]     = useState(window._firebaseReady || false);
+      const [user, setUser]       = useState(null);
+      const [vote, setVote]       = useState(3);
+      const [hasVoted, setHasVoted] = useState(false);
+      const [stats, setStats]     = useState({ average: 0, count: 0, distribution: {1:0,2:0,3:0,4:0,5:0} });
+
+      // Wait for Firebase to load
+      useEffect(() => {
+        if (ready) return;
+        const handler = () => setReady(true);
+        window.addEventListener('firebaseReady', handler);
+        return () => window.removeEventListener('firebaseReady', handler);
+      }, [ready]);
+
+      // Auth
+      useEffect(() => {
+        if (!ready) return;
+        const { signInAnonymously, onAuthStateChanged } = window._authLib;
+        const auth = window._auth;
+        signInAnonymously(auth).catch(console.error);
+        const unsub = onAuthStateChanged(auth, setUser);
+        return () => unsub();
+      }, [ready]);
+
+      // Real-time votes
+      useEffect(() => {
+        if (!user) return;
+        const { collection, onSnapshot } = window._fsLib;
+        const db = window._db;
+        const col = collection(db, 'sessions', SESSION, 'votes');
+        const unsub = onSnapshot(col, (snap) => {
+          const vals = snap.docs.map(d => d.data().value);
+          const dist = {1:0,2:0,3:0,4:0,5:0};
+          let sum = 0;
+          vals.forEach(v => { sum += v; dist[v] = (dist[v]||0)+1; });
+          setStats({
+            average: vals.length > 0 ? (sum/vals.length).toFixed(1) : '0.0',
+            count: vals.length,
+            distribution: dist
+          });
+        }, console.error);
+        return () => unsub();
+      }, [user]);
+
+      const handleVote = async () => {
+        if (!user) return;
+        const { collection, addDoc } = window._fsLib;
+        const db = window._db;
+        try {
+          await addDoc(collection(db, 'sessions', SESSION, 'votes'), {
+            value: parseInt(vote),
+            timestamp: new Date(),
+            uid: user.uid
+          });
+          setHasVoted(true);
+        } catch(e) { console.error(e); }
+      };
+
+      const maxDist = Math.max(...Object.values(stats.distribution), 1);
+
+      if (!ready || !user) return (
+        <div className="flex items-center justify-center h-40 text-[#003366] font-bold text-lg">טוען...</div>
+      );
+
+      return (
+        <div className="max-w-4xl mx-auto font-sans text-[#2D3436] p-4 sm:p-8" dir="rtl">
+          {/* Header */}
+          <div className="bg-gradient-to-br from-[#003366] to-[#004a94] p-8 rounded-t-2xl text-white text-center shadow-lg relative z-10">
+            <div className="mb-2">
+              <span className="bg-[#ED6C44] text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">פעילות אינטראקטיבית</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">מדד העמדות: בינה מלאכותית ואחריות</h2>
+            <p className="text-sm sm:text-base opacity-90 font-light">לפני שממשיכים, בואו נראה איפה אנחנו עומדים כקבוצה</p>
+          </div>
+
+          {/* Body */}
+          <div className="bg-white rounded-b-2xl shadow-md p-6 sm:p-10 -mt-2 border border-gray-100">
+            {!hasVoted ? (
+              <div className="space-y-8">
+                <div className="text-center">
+                  <p className="text-lg sm:text-xl leading-relaxed">
+                    עד כמה את/ה מסכים/ה עם ההיגד הבא:
+                    <br />
+                    <span className="text-[#003366] font-bold block mt-3">
+                      "ככל שהבינה המלאכותית תשתפר, הצורך בחשיבה ביקורתית אנושית ילך ויפחת."
+                    </span>
+                  </p>
+                </div>
+
+                <div className="max-w-md mx-auto py-6">
+                  <div className="text-center mb-4">
+                    <span className="inline-flex items-center justify-center bg-[#ED6C44] text-white text-2xl font-bold w-12 h-12 rounded-full">{vote}</span>
+                    <p className="text-[#003366] font-semibold mt-2 text-sm">{LABELS[vote]}</p>
+                  </div>
+                  <input
+                    type="range" min="1" max="5" step="1" value={vote}
+                    onChange={(e) => setVote(parseInt(e.target.value))}
+                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#ED6C44]"
+                  />
+                  <div className="flex justify-between mt-4 text-sm font-semibold text-[#003366]">
+                    <div className="text-right">
+                      <span>1</span>
+                      <p className="font-normal text-xs text-gray-500">מתנגד/ת בתוקף</p>
+                    </div>
+                    <div className="text-center opacity-50">3</div>
+                    <div className="text-left">
+                      <span>5</span>
+                      <p className="font-normal text-xs text-gray-500">מסכים/ה לחלוטין</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <button onClick={handleVote}
+                    className="bg-[#ED6C44] hover:bg-[#d55b36] text-white px-10 py-3 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-md active:scale-95">
+                    שליחת הצבעה
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="vote-result space-y-8">
+                <div className="bg-[#F3F6F9] border-r-4 border-[#ED6C44] p-6 rounded-lg">
+                  <h3 className="text-[#003366] font-bold text-xl mb-4">תודה על ההשתתפות!</h3>
+                  <p className="mb-6">הנה התוצאות המצטברות של חבריך ליחידה:</p>
+
+                  {/* Average bar */}
+                  <div className="relative pt-8 pb-4">
+                    <div className="absolute top-0 transition-all duration-1000 ease-out"
+                      style={{ left: `${100 - ((stats.average - 1) / 4) * 100}%`, transform: 'translateX(50%)' }}>
+                      <div className="bg-[#003366] text-white text-xs font-bold px-2 py-1 rounded mb-1 relative whitespace-nowrap">
+                        ממוצע הכיתה: {stats.average}
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#003366] rotate-45"></div>
+                      </div>
+                    </div>
+                    <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-l from-[#003366] to-[#004a94] transition-all duration-1000 ease-out"
+                        style={{ width: `${((stats.average - 1) / 4) * 100}%` }}></div>
+                    </div>
+                    <div className="flex justify-between mt-2 text-xs text-gray-400 font-bold">
+                      <span>מתנגדים</span>
+                      <span>מסכימים</span>
+                    </div>
+                  </div>
+
+                  {/* Distribution */}
+                  <div className="mt-6 space-y-2">
+                    {[1,2,3,4,5].map(n => {
+                      const count = stats.distribution[n] || 0;
+                      return (
+                        <div key={n} className="flex items-center gap-3 text-sm">
+                          <span className="w-4 text-center font-bold text-[#003366]">{n}</span>
+                          <div className="flex-1 h-5 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-full bg-[#ED6C44] transition-all duration-700 ease-out rounded-full"
+                              style={{ width: `${(count / maxDist) * 100}%` }} />
+                          </div>
+                          <span className="w-5 text-xs text-gray-400 font-semibold">{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-8 pt-6 border-t border-gray-200">
+                    <p className="text-sm text-gray-600 italic">
+                      * עד כה הצביעו <span className="font-bold text-[#ED6C44]">{stats.count}</span> משתתפים.
+                    </p>
+                    <div className="mt-4 text-[#2D3436] leading-relaxed bg-white p-4 rounded-md shadow-sm">
+                      <strong>נקודה למחשבה:</strong> רוב הסטודנטים מבינים שדווקא בעידן ה-AI, ה"אדם בלולאה" (Human-in-the-loop) הופך להיות קריטי יותר מתמיד. במהלך היחידה נלמד למה זה קורה.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <style>{`
+            @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+            .vote-result { animation: fadeIn 0.6s ease-out forwards; }
+            input[type=range]::-webkit-slider-thumb {
+              -webkit-appearance:none; height:24px; width:24px; border-radius:50%;
+              background:#ED6C44; cursor:pointer; border:3px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);
+            }
+          `}</style>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
