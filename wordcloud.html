@@ -3,16 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ענן מילים – כלי AI בלמידה</title>
+<title>כלי AI בלמידה</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-    background: #f0f4f8;
+    background: #e8eef5;
     color: #2D3436;
     direction: rtl;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
   header {
@@ -24,75 +26,89 @@
   }
   header h1 { font-size: 1.6em; font-weight: 700; line-height: 1.4; }
 
-  #input-section {
-    max-width: 600px;
-    margin: 40px auto 20px;
+  .main {
+    display: flex;
+    flex: 1;
+    gap: 28px;
+    padding: 32px 28px;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ===== LEFT: input panel ===== */
+  .panel-input {
     background: white;
     border-radius: 16px;
-    padding: 30px 35px;
+    padding: 30px 28px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.08);
     border-top: 5px solid #ED6C44;
+    width: 320px;
+    flex-shrink: 0;
+    height: fit-content;
   }
-  #input-section h2 {
-    font-size: 1.15em;
+  .panel-input h2 {
+    font-size: 1.05em;
     color: #003366;
     margin-bottom: 18px;
     line-height: 1.5;
   }
-  .input-row { display: flex; gap: 10px; }
   #word-input {
-    flex: 1;
-    padding: 12px 16px;
+    width: 100%;
+    padding: 12px 14px;
     border: 2px solid #ddd;
     border-radius: 10px;
     font-size: 1em;
     font-family: inherit;
     direction: rtl;
-    transition: border-color 0.2s;
     outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 10px;
   }
   #word-input:focus { border-color: #003366; }
   #submit-btn {
+    width: 100%;
     background: #003366;
     color: white;
     border: none;
-    padding: 12px 24px;
+    padding: 13px;
     border-radius: 10px;
     font-size: 1em;
     font-family: inherit;
     cursor: pointer;
-    font-weight: 600;
-    transition: background 0.2s, transform 0.1s;
-    white-space: nowrap;
+    font-weight: 700;
+    transition: background 0.2s;
+    letter-spacing: 0.03em;
   }
   #submit-btn:hover { background: #004a94; }
-  #submit-btn:active { transform: scale(0.97); }
   #submit-btn:disabled { background: #aaa; cursor: not-allowed; }
-
   #feedback-msg {
-    margin-top: 12px;
-    font-size: 0.9em;
-    min-height: 20px;
+    margin-top: 10px;
+    font-size: 0.88em;
+    min-height: 18px;
     color: #8FA93A;
     font-weight: 600;
   }
   #feedback-msg.error { color: #ED6C44; }
 
-  #cloud-section {
-    max-width: 900px;
-    margin: 0 auto 60px;
+  /* ===== RIGHT: results panel ===== */
+  .panel-results {
+    flex: 1;
     background: white;
     border-radius: 16px;
-    padding: 30px 35px;
+    padding: 30px 32px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.08);
   }
-  #cloud-section h3 {
-    color: #003366;
-    font-size: 1.1em;
-    margin-bottom: 24px;
+  .results-header {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .results-header h3 {
+    color: #003366;
+    font-size: 1.1em;
+    font-weight: 700;
   }
   #live-badge {
     display: inline-flex;
@@ -103,7 +119,7 @@
     color: #ED6C44;
     font-size: 0.75em;
     font-weight: 700;
-    padding: 3px 10px;
+    padding: 4px 12px;
     border-radius: 20px;
   }
   #live-dot {
@@ -113,62 +129,95 @@
     animation: pulse 1.4s infinite;
   }
   @keyframes pulse {
-    0%,100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.7); }
+    0%,100% { opacity:1; transform:scale(1); }
+    50% { opacity:0.4; transform:scale(0.7); }
   }
 
-  #word-cloud {
+  /* ===== BARS ===== */
+  #bars-list { display: flex; flex-direction: column; gap: 14px; }
+
+  .bar-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    justify-content: center;
     align-items: center;
-    min-height: 200px;
-    padding: 10px 0;
+    gap: 12px;
+    animation: slide-in 0.35s ease;
+  }
+  @keyframes slide-in {
+    from { opacity:0; transform:translateX(16px); }
+    to   { opacity:1; transform:translateX(0); }
   }
 
-  .word-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border-radius: 30px;
+  .bar-rank {
+    width: 24px;
+    text-align: center;
     font-weight: 700;
-    line-height: 1;
-    animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    cursor: default;
-    user-select: none;
-    transition: transform 0.15s;
+    color: #888;
+    font-size: 0.95em;
+    flex-shrink: 0;
   }
-  .word-chip:hover { transform: scale(1.06); }
-  @keyframes pop-in {
-    from { opacity: 0; transform: scale(0.5); }
-    to   { opacity: 1; transform: scale(1); }
+  .bar-label {
+    width: 120px;
+    flex-shrink: 0;
+    font-size: 0.95em;
+    font-weight: 600;
+    color: #2D3436;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: right;
   }
-  .word-chip .count-badge {
-    background: rgba(255,255,255,0.35);
-    border-radius: 50%;
-    display: inline-flex;
+  .bar-track {
+    flex: 1;
+    background: #eef0f3;
+    border-radius: 6px;
+    height: 36px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    min-width: 30px;
+    display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 0.72em;
+    justify-content: flex-end;
+    padding-left: 10px;
+  }
+  .bar-count {
+    font-size: 0.85em;
     font-weight: 800;
+    color: white;
   }
 
   #empty-msg {
     color: #aaa;
     text-align: center;
-    width: 100%;
+    padding: 40px 0;
     font-size: 1em;
-    padding: 30px 0;
   }
-
   #total-count {
-    text-align: center;
     margin-top: 20px;
-    font-size: 0.9em;
-    color: #888;
+    text-align: left;
+    font-size: 0.85em;
+    color: #999;
   }
-  #total-count span { font-weight: 700; color: #003366; }
+  #total-count strong { color: #003366; }
+
+  /* Bar colours — cycle through course palette */
+  .bar-c0 { background: #003366; }
+  .bar-c1 { background: #ED6C44; }
+  .bar-c2 { background: #004a94; }
+  .bar-c3 { background: #8FA93A; }
+  .bar-c4 { background: #D84315; }
+  .bar-c5 { background: #6E862D; }
+  .bar-c6 { background: #1a5276; }
+  .bar-c7 { background: #b5451b; }
+
+  @media (max-width: 720px) {
+    .main { flex-direction: column; padding: 20px 16px; }
+    .panel-input { width: 100%; }
+  }
 </style>
 </head>
 <body>
@@ -177,22 +226,24 @@
   <h1>מהם כלי הבינה המלאכותית הכי שימושיים לכם בלמידה?</h1>
 </header>
 
-<div id="input-section">
-  <h2>כתבו כלי AI אחד שאתם משתמשים בו 👇</h2>
-  <div class="input-row">
-    <input id="word-input" type="text" placeholder="לדוגמה: ChatGPT, Gemini, Copilot..." maxlength="40" autocomplete="off" />
-    <button id="submit-btn" onclick="submitWord()">שלח</button>
-  </div>
-  <div id="feedback-msg"></div>
-</div>
+<div class="main">
 
-<div id="cloud-section">
-  <h3>
-    ענן המילים של הכיתה
-    <span id="live-badge"><span id="live-dot"></span>Live</span>
-  </h3>
-  <div id="word-cloud"><div id="empty-msg">ממתין לתשובות ראשונות...</div></div>
-  <div id="total-count">סה"כ תשובות: <span id="total-num">0</span></div>
+  <div class="panel-input">
+    <h2>כתבו כלי AI אחד שאתם משתמשים בו 👇</h2>
+    <input id="word-input" type="text" placeholder="לדוגמה: ChatGPT, Gemini..." maxlength="40" autocomplete="off" />
+    <button id="submit-btn" onclick="submitWord()">שלח</button>
+    <div id="feedback-msg"></div>
+  </div>
+
+  <div class="panel-results">
+    <div class="results-header">
+      <h3>תוצאות הכיתה</h3>
+      <span id="live-badge"><span id="live-dot"></span>Live</span>
+    </div>
+    <div id="bars-list"><div id="empty-msg">ממתין לתשובות ראשונות...</div></div>
+    <div id="total-count"></div>
+  </div>
+
 </div>
 
 <script type="module">
@@ -203,54 +254,25 @@
   const firebaseConfig = {
     apiKey: "AIzaSyCYoy6J3gcLg8zKUSg2YLtiaq2KCltW8LM",
     authDomain: "voting-app-f0bc1.firebaseapp.com",
+    databaseURL: "https://voting-app-f0bc1-default-rtdb.firebaseio.com",
     projectId: "voting-app-f0bc1",
     storageBucket: "voting-app-f0bc1.firebasestorage.app",
     messagingSenderId: "463010222207",
-    appId: "1:463010222207:web:149f0cf2b4857b4d67af4a",
-    databaseURL: "https://voting-app-f0bc1-default-rtdb.firebaseio.com"
+    appId: "1:463010222207:web:149f0cf2b4857b4d67af4a"
   };
 
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
   const wordsRef = ref(db, "wordcloud/ai-tools");
 
-  const PALETTES = [
-    { bg: "#003366", text: "#ffffff" },
-    { bg: "#ED6C44", text: "#ffffff" },
-    { bg: "#8FA93A", text: "#ffffff" },
-    { bg: "#004a94", text: "#ffffff" },
-    { bg: "#D84315", text: "#ffffff" },
-    { bg: "#6E862D", text: "#ffffff" },
-    { bg: "#1a5276", text: "#ffffff" },
-    { bg: "#b5451b", text: "#ffffff" },
-  ];
-
-  function colorFor(word) {
-    let h = 0;
-    for (let i = 0; i < word.length; i++) h = (h * 31 + word.charCodeAt(i)) >>> 0;
-    return PALETTES[h % PALETTES.length];
-  }
-
-  function sizeFor(count, max) {
-    const min = 14, maxSize = 52;
-    if (max <= 1) return 22;
-    return Math.round(min + ((count - 1) / (max - 1)) * (maxSize - min));
-  }
-
-  function chipStyle(count, max) {
-    const fs = sizeFor(count, max);
-    const pad = fs < 20 ? "6px 14px" : fs < 32 ? "9px 20px" : "12px 26px";
-    const badge = fs < 20 ? 18 : fs < 32 ? 22 : 28;
-    return { fs, pad, badge };
-  }
-
-  function renderCloud(data) {
-    const cloud = document.getElementById("word-cloud");
-    const totalEl = document.getElementById("total-num");
+  /* ── render bars ── */
+  function renderBars(data) {
+    const list = document.getElementById("bars-list");
+    const totalEl = document.getElementById("total-count");
 
     if (!data) {
-      cloud.innerHTML = '<div id="empty-msg">ממתין לתשובות ראשונות...</div>';
-      totalEl.textContent = "0";
+      list.innerHTML = '<div id="empty-msg">ממתין לתשובות ראשונות...</div>';
+      totalEl.innerHTML = "";
       return;
     }
 
@@ -260,41 +282,45 @@
       if (key) counts[key] = (counts[key] || 0) + 1;
     });
 
-    const total = Object.values(counts).reduce((a,b) => a+b, 0);
-    totalEl.textContent = total;
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const total = entries.reduce((s, [,v]) => s + v, 0);
+    const max = entries[0]?.[1] || 1;
 
-    if (total === 0) {
-      cloud.innerHTML = '<div id="empty-msg">ממתין לתשובות ראשונות...</div>';
+    if (entries.length === 0) {
+      list.innerHTML = '<div id="empty-msg">ממתין לתשובות ראשונות...</div>';
+      totalEl.innerHTML = "";
       return;
     }
 
-    const max = Math.max(...Object.values(counts));
-    const entries = Object.entries(counts).sort(() => Math.random() - 0.5);
+    list.innerHTML = "";
+    entries.forEach(([word, count], i) => {
+      const pct = Math.max(5, Math.round((count / max) * 100));
+      const colorClass = `bar-c${i % 8}`;
 
-    cloud.innerHTML = "";
-    entries.forEach(([word, count]) => {
-      const { fs, pad, badge } = chipStyle(count, max);
-      const { bg, text } = colorFor(word);
-      const chip = document.createElement("span");
-      chip.className = "word-chip";
-      chip.style.cssText = `background:${bg};color:${text};font-size:${fs}px;padding:${pad};`;
-      chip.title = `${word}: ${count} תשובות`;
-
-      chip.appendChild(document.createTextNode(word));
-
-      if (count > 1) {
-        const b = document.createElement("span");
-        b.className = "count-badge";
-        b.style.cssText = `width:${badge}px;height:${badge}px;`;
-        b.textContent = count;
-        chip.appendChild(b);
-      }
-      cloud.appendChild(chip);
+      const row = document.createElement("div");
+      row.className = "bar-row";
+      row.innerHTML = `
+        <div class="bar-rank">${i + 1}.</div>
+        <div class="bar-label">${escHtml(word)}</div>
+        <div class="bar-track">
+          <div class="bar-fill ${colorClass}" style="width:${pct}%">
+            <span class="bar-count">${count}</span>
+          </div>
+        </div>`;
+      list.appendChild(row);
     });
+
+    totalEl.innerHTML = `סה"כ תשובות: <strong>${total}</strong>`;
   }
 
-  onValue(wordsRef, snap => renderCloud(snap.val()));
+  function escHtml(s) {
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
 
+  /* ── live listener ── */
+  onValue(wordsRef, snap => renderBars(snap.val()));
+
+  /* ── submit ── */
   window.submitWord = async function () {
     const input = document.getElementById("word-input");
     const btn   = document.getElementById("submit-btn");
@@ -308,9 +334,10 @@
       await push(wordsRef, word);
       input.value = "";
       showMsg("✓ תשובתך נשמרה!", false);
-      setTimeout(() => msg.textContent = "", 3000);
+      setTimeout(() => { msg.textContent = ""; msg.className = ""; }, 3000);
     } catch (e) {
-      showMsg("שגיאה בשמירה, נסה שוב", true);
+      showMsg("שגיאה בשמירה — בדקי חיבור לאינטרנט", true);
+      console.error(e);
     } finally {
       btn.disabled = false;
       input.focus();
