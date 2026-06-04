@@ -13,59 +13,56 @@
     color: #2D3436;
     direction: rtl;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
   }
 
   header {
     background: linear-gradient(135deg, #003366 0%, #004a94 100%);
     color: white;
-    padding: 28px 40px;
+    padding: 26px 40px;
     text-align: center;
     box-shadow: 0 4px 12px rgba(0,51,102,0.3);
   }
-  header h1 { font-size: 1.6em; font-weight: 700; line-height: 1.4; }
+  header h1 { font-size: 1.5em; font-weight: 700; line-height: 1.4; }
 
   .main {
     display: flex;
-    flex: 1;
-    gap: 28px;
-    padding: 32px 28px;
+    gap: 24px;
+    padding: 28px 24px;
     max-width: 1100px;
     margin: 0 auto;
-    width: 100%;
   }
 
-  /* ===== LEFT: input panel ===== */
+  /* ===== INPUT PANEL ===== */
   .panel-input {
     background: white;
     border-radius: 16px;
-    padding: 30px 28px;
+    padding: 28px 26px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.08);
     border-top: 5px solid #ED6C44;
-    width: 320px;
+    width: 310px;
     flex-shrink: 0;
     height: fit-content;
   }
   .panel-input h2 {
-    font-size: 1.05em;
+    font-size: 1em;
     color: #003366;
     margin-bottom: 18px;
-    line-height: 1.5;
+    line-height: 1.6;
+    font-weight: 700;
   }
-  #word-input {
+  .field-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .word-input {
     width: 100%;
-    padding: 12px 14px;
+    padding: 11px 14px;
     border: 2px solid #ddd;
     border-radius: 10px;
-    font-size: 1em;
+    font-size: 0.97em;
     font-family: inherit;
     direction: rtl;
     outline: none;
     transition: border-color 0.2s;
-    margin-bottom: 10px;
   }
-  #word-input:focus { border-color: #003366; }
+  .word-input:focus { border-color: #003366; }
   #submit-btn {
     width: 100%;
     background: #003366;
@@ -78,7 +75,6 @@
     cursor: pointer;
     font-weight: 700;
     transition: background 0.2s;
-    letter-spacing: 0.03em;
   }
   #submit-btn:hover { background: #004a94; }
   #submit-btn:disabled { background: #aaa; cursor: not-allowed; }
@@ -91,25 +87,22 @@
   }
   #feedback-msg.error { color: #ED6C44; }
 
-  /* ===== RIGHT: results panel ===== */
+  /* ===== RESULTS PANEL ===== */
   .panel-results {
     flex: 1;
     background: white;
     border-radius: 16px;
-    padding: 30px 32px;
+    padding: 28px 30px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    min-height: 400px;
   }
   .results-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 24px;
+    margin-bottom: 22px;
   }
-  .results-header h3 {
-    color: #003366;
-    font-size: 1.1em;
-    font-weight: 700;
-  }
+  .results-header h3 { color: #003366; font-size: 1.05em; font-weight: 700; }
   #live-badge {
     display: inline-flex;
     align-items: center;
@@ -117,7 +110,7 @@
     background: #FFF5F2;
     border: 1px solid #ED6C44;
     color: #ED6C44;
-    font-size: 0.75em;
+    font-size: 0.73em;
     font-weight: 700;
     padding: 4px 12px;
     border-radius: 20px;
@@ -129,94 +122,48 @@
     animation: pulse 1.4s infinite;
   }
   @keyframes pulse {
-    0%,100% { opacity:1; transform:scale(1); }
-    50% { opacity:0.4; transform:scale(0.7); }
+    0%,100%{opacity:1;transform:scale(1);}
+    50%{opacity:0.4;transform:scale(0.7);}
   }
 
-  /* ===== BARS ===== */
-  #bars-list { display: flex; flex-direction: column; gap: 14px; }
-
+  /* bars */
+  #bars-list { display: flex; flex-direction: column; gap: 13px; }
   .bar-row {
     display: flex;
     align-items: center;
-    gap: 12px;
-    animation: slide-in 0.35s ease;
+    gap: 10px;
+    animation: slidein 0.3s ease;
   }
-  @keyframes slide-in {
-    from { opacity:0; transform:translateX(16px); }
-    to   { opacity:1; transform:translateX(0); }
+  @keyframes slidein {
+    from{opacity:0;transform:translateX(12px);}
+    to{opacity:1;transform:translateX(0);}
   }
-
-  .bar-rank {
-    width: 24px;
-    text-align: center;
-    font-weight: 700;
-    color: #888;
-    font-size: 0.95em;
-    flex-shrink: 0;
-  }
-  .bar-label {
-    width: 120px;
-    flex-shrink: 0;
-    font-size: 0.95em;
-    font-weight: 600;
-    color: #2D3436;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-align: right;
-  }
-  .bar-track {
-    flex: 1;
-    background: #eef0f3;
-    border-radius: 6px;
-    height: 36px;
-    overflow: hidden;
-    position: relative;
-  }
+  .bar-rank { width: 22px; text-align: center; font-weight: 700; color: #999; font-size:0.9em; flex-shrink:0; }
+  .bar-label { width: 130px; flex-shrink:0; font-size:0.93em; font-weight:600; color:#2D3436; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:right; }
+  .bar-track { flex:1; background:#eef0f3; border-radius:6px; height:38px; overflow:hidden; }
   .bar-fill {
-    height: 100%;
-    border-radius: 6px;
+    height:100%; border-radius:6px;
     transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-    min-width: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-left: 10px;
+    display:flex; align-items:center; justify-content:flex-end; padding-left:10px;
+    min-width:36px;
   }
-  .bar-count {
-    font-size: 0.85em;
-    font-weight: 800;
-    color: white;
+  .bar-count { font-size:0.83em; font-weight:800; color:white; }
+
+  .bar-c0{background:#003366;} .bar-c1{background:#ED6C44;} .bar-c2{background:#004a94;}
+  .bar-c3{background:#8FA93A;} .bar-c4{background:#D84315;} .bar-c5{background:#6E862D;}
+  .bar-c6{background:#1a5276;} .bar-c7{background:#b5451b;}
+
+  #empty-msg { color:#bbb; text-align:center; padding:50px 0; font-size:1em; }
+  #total-count { margin-top:18px; font-size:0.85em; color:#999; text-align:left; }
+  #total-count strong { color:#003366; }
+  #error-banner {
+    display:none; background:#FFF5F2; border:1px solid #ED6C44; color:#D84315;
+    padding:10px 14px; border-radius:8px; font-size:0.85em; margin-bottom:14px;
   }
 
-  #empty-msg {
-    color: #aaa;
-    text-align: center;
-    padding: 40px 0;
-    font-size: 1em;
-  }
-  #total-count {
-    margin-top: 20px;
-    text-align: left;
-    font-size: 0.85em;
-    color: #999;
-  }
-  #total-count strong { color: #003366; }
-
-  /* Bar colours — cycle through course palette */
-  .bar-c0 { background: #003366; }
-  .bar-c1 { background: #ED6C44; }
-  .bar-c2 { background: #004a94; }
-  .bar-c3 { background: #8FA93A; }
-  .bar-c4 { background: #D84315; }
-  .bar-c5 { background: #6E862D; }
-  .bar-c6 { background: #1a5276; }
-  .bar-c7 { background: #b5451b; }
-
-  @media (max-width: 720px) {
-    .main { flex-direction: column; padding: 20px 16px; }
-    .panel-input { width: 100%; }
+  @media(max-width:700px){
+    .main{flex-direction:column; padding:16px;}
+    .panel-input{width:100%;}
   }
 </style>
 </head>
@@ -229,9 +176,14 @@
 <div class="main">
 
   <div class="panel-input">
-    <h2>כתבו כלי AI אחד שאתם משתמשים בו 👇</h2>
-    <input id="word-input" type="text" placeholder="לדוגמה: ChatGPT, Gemini..." maxlength="40" autocomplete="off" />
-    <button id="submit-btn" onclick="submitWord()">שלח</button>
+    <h2>כתבו עד 3 כלי AI שאתם משתמשים בהם 👇</h2>
+    <div id="error-banner"></div>
+    <div class="field-group">
+      <input class="word-input" id="w1" type="text" placeholder="כלי ראשון..." maxlength="40" autocomplete="off" />
+      <input class="word-input" id="w2" type="text" placeholder="כלי שני..." maxlength="40" autocomplete="off" />
+      <input class="word-input" id="w3" type="text" placeholder="כלי שלישי..." maxlength="40" autocomplete="off" />
+    </div>
+    <button id="submit-btn" onclick="submitWords()">שלח</button>
     <div id="feedback-msg"></div>
   </div>
 
@@ -247,27 +199,27 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, push, onValue }
+  import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, push, onValue, set }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCYoy6J3gcLg8zKUSg2YLtiaq2KCltW8LM",
-    authDomain: "voting-app-f0bc1.firebaseapp.com",
-    databaseURL: "https://voting-app-f0bc1-default-rtdb.firebaseio.com",
-    projectId: "voting-app-f0bc1",
-    storageBucket: "voting-app-f0bc1.firebasestorage.app",
+  const cfg = {
+    apiKey:            "AIzaSyCYoy6J3gcLg8zKUSg2YLtiaq2KCltW8LM",
+    authDomain:        "voting-app-f0bc1.firebaseapp.com",
+    databaseURL:       "https://voting-app-f0bc1-default-rtdb.firebaseio.com",
+    projectId:         "voting-app-f0bc1",
+    storageBucket:     "voting-app-f0bc1.firebasestorage.app",
     messagingSenderId: "463010222207",
-    appId: "1:463010222207:web:149f0cf2b4857b4d67af4a"
+    appId:             "1:463010222207:web:149f0cf2b4857b4d67af4a"
   };
 
-  const app = initializeApp(firebaseConfig);
+  const app = initializeApp(cfg);
   const db  = getDatabase(app);
   const wordsRef = ref(db, "wordcloud/ai-tools");
 
-  /* ── render bars ── */
-  function renderBars(data) {
-    const list = document.getElementById("bars-list");
+  /* ── render ── */
+  function render(data) {
+    const list    = document.getElementById("bars-list");
     const totalEl = document.getElementById("total-count");
 
     if (!data) {
@@ -278,15 +230,15 @@
 
     const counts = {};
     Object.values(data).forEach(w => {
-      const key = w.trim().toLowerCase();
-      if (key) counts[key] = (counts[key] || 0) + 1;
+      const k = String(w).trim().toLowerCase();
+      if (k) counts[k] = (counts[k] || 0) + 1;
     });
 
-    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    const total = entries.reduce((s, [,v]) => s + v, 0);
-    const max = entries[0]?.[1] || 1;
+    const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    const total   = entries.reduce((s,[,v])=>s+v, 0);
+    const max     = entries[0]?.[1] || 1;
 
-    if (entries.length === 0) {
+    if (!entries.length) {
       list.innerHTML = '<div id="empty-msg">ממתין לתשובות ראשונות...</div>';
       totalEl.innerHTML = "";
       return;
@@ -294,64 +246,68 @@
 
     list.innerHTML = "";
     entries.forEach(([word, count], i) => {
-      const pct = Math.max(5, Math.round((count / max) * 100));
-      const colorClass = `bar-c${i % 8}`;
-
+      const pct = Math.max(6, Math.round((count/max)*100));
       const row = document.createElement("div");
       row.className = "bar-row";
-      row.innerHTML = `
-        <div class="bar-rank">${i + 1}.</div>
-        <div class="bar-label">${escHtml(word)}</div>
-        <div class="bar-track">
-          <div class="bar-fill ${colorClass}" style="width:${pct}%">
-            <span class="bar-count">${count}</span>
-          </div>
-        </div>`;
+      row.innerHTML =
+        `<div class="bar-rank">${i+1}.</div>` +
+        `<div class="bar-label">${esc(word)}</div>` +
+        `<div class="bar-track">` +
+          `<div class="bar-fill bar-c${i%8}" style="width:${pct}%">` +
+            `<span class="bar-count">${count}</span>` +
+          `</div>` +
+        `</div>`;
       list.appendChild(row);
     });
-
     totalEl.innerHTML = `סה"כ תשובות: <strong>${total}</strong>`;
   }
 
-  function escHtml(s) {
-    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  }
+  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
-  /* ── live listener ── */
-  onValue(wordsRef, snap => renderBars(snap.val()));
+  /* ── live ── */
+  onValue(wordsRef, snap => render(snap.val()), err => {
+    showBanner("שגיאת חיבור ל-Firebase: " + err.message);
+  });
 
   /* ── submit ── */
-  window.submitWord = async function () {
-    const input = document.getElementById("word-input");
-    const btn   = document.getElementById("submit-btn");
-    const msg   = document.getElementById("feedback-msg");
-    const word  = input.value.trim();
+  window.submitWords = async function() {
+    const ids  = ["w1","w2","w3"];
+    const btn  = document.getElementById("submit-btn");
+    const msg  = document.getElementById("feedback-msg");
 
-    if (!word) { showMsg("נא לכתוב כלי AI לפני השליחה", true); return; }
+    const words = ids.map(id => document.getElementById(id).value.trim()).filter(Boolean);
+    if (!words.length) { showMsg("נא לכתוב לפחות כלי אחד", true); return; }
 
     btn.disabled = true;
     try {
-      await push(wordsRef, word);
-      input.value = "";
-      showMsg("✓ תשובתך נשמרה!", false);
-      setTimeout(() => { msg.textContent = ""; msg.className = ""; }, 3000);
-    } catch (e) {
-      showMsg("שגיאה בשמירה — בדקי חיבור לאינטרנט", true);
+      for (const w of words) await push(wordsRef, w);
+      ids.forEach(id => document.getElementById(id).value = "");
+      showMsg("✓ תשובותיך נשמרו!", false);
+      setTimeout(()=>{ msg.textContent=""; msg.className=""; }, 3000);
+    } catch(e) {
+      showMsg("שגיאה: " + e.message, true);
+      showBanner("לא ניתן לשמור — ייתכן שחוקי Firebase אינם מאפשרים כתיבה. יש לפתוח Firebase Console ולהגדיר Rules ל-true.");
       console.error(e);
     } finally {
       btn.disabled = false;
-      input.focus();
+      document.getElementById("w1").focus();
     }
   };
 
-  function showMsg(text, isError) {
-    const msg = document.getElementById("feedback-msg");
-    msg.textContent = text;
-    msg.className = isError ? "error" : "";
+  function showMsg(t, err) {
+    const el = document.getElementById("feedback-msg");
+    el.textContent = t;
+    el.className = err ? "error" : "";
+  }
+  function showBanner(t) {
+    const el = document.getElementById("error-banner");
+    el.textContent = t;
+    el.style.display = "block";
   }
 
-  document.getElementById("word-input").addEventListener("keydown", e => {
-    if (e.key === "Enter") window.submitWord();
+  /* Enter on last field submits */
+  document.getElementById("w3").addEventListener("keydown", e => {
+    if (e.key === "Enter") window.submitWords();
   });
 </script>
 </body>
