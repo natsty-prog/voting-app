@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ענן מילים – כלי AI בלמידה</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f0f4f8;
+    color: #2D3436;
+    direction: rtl;
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, #003366 0%, #004a94 100%);
+    color: white;
+    padding: 28px 40px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,51,102,0.3);
+  }
+  header h1 { font-size: 1.6em; font-weight: 700; line-height: 1.4; }
+
+  #input-section {
+    max-width: 600px;
+    margin: 40px auto 20px;
+    background: white;
+    border-radius: 16px;
+    padding: 30px 35px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border-top: 5px solid #ED6C44;
+  }
+  #input-section h2 {
+    font-size: 1.15em;
+    color: #003366;
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+  .input-row { display: flex; gap: 10px; }
+  #word-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    font-size: 1em;
+    font-family: inherit;
+    direction: rtl;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  #word-input:focus { border-color: #003366; }
+  #submit-btn {
+    background: #003366;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 1em;
+    font-family: inherit;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+  #submit-btn:hover { background: #004a94; }
+  #submit-btn:active { transform: scale(0.97); }
+  #submit-btn:disabled { background: #aaa; cursor: not-allowed; }
+
+  #feedback-msg {
+    margin-top: 12px;
+    font-size: 0.9em;
+    min-height: 20px;
+    color: #8FA93A;
+    font-weight: 600;
+  }
+  #feedback-msg.error { color: #ED6C44; }
+
+  #cloud-section {
+    max-width: 900px;
+    margin: 0 auto 60px;
+    background: white;
+    border-radius: 16px;
+    padding: 30px 35px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  }
+  #cloud-section h3 {
+    color: #003366;
+    font-size: 1.1em;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #FFF5F2;
+    border: 1px solid #ED6C44;
+    color: #ED6C44;
+    font-size: 0.75em;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  #live-dot {
+    width: 8px; height: 8px;
+    background: #ED6C44;
+    border-radius: 50%;
+    animation: pulse 1.4s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  #word-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    padding: 10px 0;
+  }
+
+  .word-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 30px;
+    font-weight: 700;
+    line-height: 1;
+    animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: default;
+    user-select: none;
+    transition: transform 0.15s;
+  }
+  .word-chip:hover { transform: scale(1.06); }
+  @keyframes pop-in {
+    from { opacity: 0; transform: scale(0.5); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .word-chip .count-badge {
+    background: rgba(255,255,255,0.35);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72em;
+    font-weight: 800;
+  }
+
+  #empty-msg {
+    color: #aaa;
+    text-align: center;
+    width: 100%;
+    font-size: 1em;
+    padding: 30px 0;
+  }
+
+  #total-count {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.9em;
+    color: #888;
+  }
+  #total-count span { font-weight: 700; color: #003366; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>מהם כלי הבינה המלאכותית הכי שימושיים לכם בלמידה?</h1>
+</header>
+
+<div id="input-section">
+  <h2>כתבו כלי AI אחד שאתם משתמשים בו 👇</h2>
+  <div class="input-row">
+    <input id="word-input" type="text" placeholder="לדוגמה: ChatGPT, Gemini, Copilot..." maxlength="40" autocomplete="off" />
+    <button id="submit-btn" onclick="submitWord()">שלח</button>
+  </div>
+  <div id="feedback-msg"></div>
+</div>
+
+<div id="cloud-section">
+  <h3>
+    ענן המילים של הכיתה
+    <span id="live-badge"><span id="live-dot"></span>Live</span>
+  </h3>
+  <div id="word-cloud"><div id="empty-msg">ממתין לתשובות ראשונות...</div></div>
+  <div id="total-count">סה"כ תשובות: <span id="total-num">0</span></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, push, onValue }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCYoy6J3gcLg8zKUSg2YLtiaq2KCltW8LM",
+    authDomain: "voting-app-f0bc1.firebaseapp.com",
+    projectId: "voting-app-f0bc1",
+    storageBucket: "voting-app-f0bc1.firebasestorage.app",
+    messagingSenderId: "463010222207",
+    appId: "1:463010222207:web:149f0cf2b4857b4d67af4a",
+    databaseURL: "https://voting-app-f0bc1-default-rtdb.firebaseio.com"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+  const wordsRef = ref(db, "wordcloud/ai-tools");
+
+  const PALETTES = [
+    { bg: "#003366", text: "#ffffff" },
+    { bg: "#ED6C44", text: "#ffffff" },
+    { bg: "#8FA93A", text: "#ffffff" },
+    { bg: "#004a94", text: "#ffffff" },
+    { bg: "#D84315", text: "#ffffff" },
+    { bg: "#6E862D", text: "#ffffff" },
+    { bg: "#1a5276", text: "#ffffff" },
+    { bg: "#b5451b", text: "#ffffff" },
+  ];
+
+  function colorFor(word) {
+    let h = 0;
+    for (let i = 0; i < word.length; i++) h = (h * 31 + word.charCodeAt(i)) >>> 0;
+    return PALETTES[h % PALETTES.length];
+  }
+
+  function sizeFor(count, max) {
+    const min = 14, maxSize = 52;
+    if (max <= 1) return 22;
+    return Math.round(min + ((count - 1) / (max - 1)) * (maxSize - min));
+  }
+
+  function chipStyle(count, max) {
+    const fs = sizeFor(count, max);
+    const pad = fs < 20 ? "6px 14px" : fs < 32 ? "9px 20px" : "12px 26px";
+    const badge = fs < 20 ? 18 : fs < 32 ? 22 : 28;
+    return { fs, pad, badge };
+  }
+
+  function renderCloud(data) {
+    const cloud = document.getElementById("word-cloud");
+    const totalEl = document.getElementById("total-num");
+
+    if (!data) {
+      cloud.innerHTML = '<div id="empty-msg">ממתין לתשובות ראשונות...</div>';
+      totalEl.textContent = "0";
+      return;
+    }
+
+    const counts = {};
+    Object.values(data).forEach(w => {
+      const key = w.trim().toLowerCase();
+      if (key) counts[key] = (counts[key] || 0) + 1;
+    });
+
+    const total = Object.values(counts).reduce((a,b) => a+b, 0);
+    totalEl.textContent = total;
+
+    if (total === 0) {
+      cloud.innerHTML = '<div id="empty-msg">ממתין לתשובות ראשונות...</div>';
+      return;
+    }
+
+    const max = Math.max(...Object.values(counts));
+    const entries = Object.entries(counts).sort(() => Math.random() - 0.5);
+
+    cloud.innerHTML = "";
+    entries.forEach(([word, count]) => {
+      const { fs, pad, badge } = chipStyle(count, max);
+      const { bg, text } = colorFor(word);
+      const chip = document.createElement("span");
+      chip.className = "word-chip";
+      chip.style.cssText = `background:${bg};color:${text};font-size:${fs}px;padding:${pad};`;
+      chip.title = `${word}: ${count} תשובות`;
+
+      chip.appendChild(document.createTextNode(word));
+
+      if (count > 1) {
+        const b = document.createElement("span");
+        b.className = "count-badge";
+        b.style.cssText = `width:${badge}px;height:${badge}px;`;
+        b.textContent = count;
+        chip.appendChild(b);
+      }
+      cloud.appendChild(chip);
+    });
+  }
+
+  onValue(wordsRef, snap => renderCloud(snap.val()));
+
+  window.submitWord = async function () {
+    const input = document.getElementById("word-input");
+    const btn   = document.getElementById("submit-btn");
+    const msg   = document.getElementById("feedback-msg");
+    const word  = input.value.trim();
+
+    if (!word) { showMsg("נא לכתוב כלי AI לפני השליחה", true); return; }
+
+    btn.disabled = true;
+    try {
+      await push(wordsRef, word);
+      input.value = "";
+      showMsg("✓ תשובתך נשמרה!", false);
+      setTimeout(() => msg.textContent = "", 3000);
+    } catch (e) {
+      showMsg("שגיאה בשמירה, נסה שוב", true);
+    } finally {
+      btn.disabled = false;
+      input.focus();
+    }
+  };
+
+  function showMsg(text, isError) {
+    const msg = document.getElementById("feedback-msg");
+    msg.textContent = text;
+    msg.className = isError ? "error" : "";
+  }
+
+  document.getElementById("word-input").addEventListener("keydown", e => {
+    if (e.key === "Enter") window.submitWord();
+  });
+</script>
+</body>
+</html>
