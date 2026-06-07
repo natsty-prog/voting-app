@@ -377,7 +377,7 @@
 
         const { auth, collectionRef, db } = window.manifestoApp;
 
-        const ADMIN_PASSWORD = "natalie2025";
+        const ADMIN_PASSWORD = "opal";
 
         const submitBtn          = document.getElementById('submitBtn');
         const scrollContent      = document.getElementById('scrollContent');
@@ -434,7 +434,7 @@
                         <span class="signature">— ${item.name}</span>
                         <div style="display:flex; align-items:center; gap:10px;">
                             <span class="entry-date">${formatDate(item.createdAt)} &nbsp;·&nbsp; #${index + 1}</span>
-                            <button class="delete-btn" data-id="${item.id}">🗑️ מחק</button>
+                            <button class="delete-btn" data-id="${item.id}" style="display:${isAdmin ? 'inline-block' : 'none'}">🗑️ מחק</button>
                         </div>
                     </div>`;
                 scrollContent.appendChild(entry);
