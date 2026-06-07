@@ -287,7 +287,6 @@
         <header class="text-center mb-6">
             <h1 class="scroll-title">אמנת ה-AI הכיתתית</h1>
             <p class="text-xl font-medium text-[#003366]/80 italic">בונים יחד את עקרונות העבודה בעידן החדש</p>
-            <button id="adminLoginBtn" onclick="openAdminModal()" style="margin-top:14px; background:#f0f4f8; border:1px solid #c8d8e8; color:#003366; font-size:0.85rem; font-weight:700; cursor:pointer; font-family:'Assistant',sans-serif; padding:6px 18px; border-radius:20px; transition:background 0.2s;">⚙️ כניסת מנהל</button>
         </header>
 
         <!-- Admin Bar -->
@@ -330,6 +329,9 @@
             <div class="wood-rod"></div>
         </div>
     </div>
+
+    <!-- Fixed Admin Button -->
+    <button onclick="openAdminModal()" style="position:fixed; bottom:20px; left:20px; z-index:999; background:#003366; color:white; border:none; border-radius:50px; padding:10px 20px; font-size:0.85rem; font-weight:700; cursor:pointer; font-family:'Assistant',sans-serif; box-shadow:0 4px 12px rgba(0,51,102,0.4);">⚙️ כניסת מנהל</button>
 
     <!-- Success Overlay -->
     <div id="successOverlay" class="fixed inset-0 bg-[#003366]/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
