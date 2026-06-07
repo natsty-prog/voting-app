@@ -8,7 +8,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCYoy6J3gcLg8zKUSg2YLtiaq2KCltW8LM",
@@ -25,7 +25,8 @@
 
         window.manifestoApp = {
             db, auth,
-            collectionRef: collection(db, 'sessions', 'ai-manifesto', 'entries')
+            collectionRef: collection(db, 'sessions', 'ai-manifesto', 'entries'),
+            deleteDoc, doc, getDocs
         };
     </script>
     <style>
@@ -55,7 +56,6 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
         }
 
-        /* Scroll Visual Structure */
         .scroll-wrapper {
             max-width: 800px;
             margin: 0 auto;
@@ -63,7 +63,6 @@
             filter: drop-shadow(0 15px 30px rgba(0, 51, 102, 0.15));
         }
 
-        /* Wooden Rods */
         .wood-rod {
             height: 32px;
             background: linear-gradient(180deg, #6b3a1f 0%, #3d1f0a 40%, #6b3a1f 100%);
@@ -89,7 +88,6 @@
         .wood-rod::before { left: -20px; }
         .wood-rod::after { right: -20px; }
 
-        /* Parchment Body — sepia */
         .scroll-paper {
             background-color: #f2e0b6;
             background-image:
@@ -123,7 +121,6 @@
             pointer-events: none;
         }
 
-        /* Entry Item */
         .scroll-entry {
             border-bottom: 1px dashed rgba(100,60,10,0.25);
             padding: 2.5rem 0;
@@ -159,7 +156,27 @@
             letter-spacing: 0.05em;
         }
 
-        /* Form Styling — original course colors */
+        .delete-btn {
+            background: none;
+            border: 1px solid rgba(180,60,10,0.3);
+            color: rgba(180,60,10,0.5);
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Assistant', sans-serif;
+            display: none;
+        }
+
+        .delete-btn:hover {
+            background: rgba(180,60,10,0.08);
+            color: #b43c0a;
+            border-color: #b43c0a;
+        }
+
+        .admin-mode .delete-btn { display: inline-block; }
+
         .form-section {
             background: white;
             border: 2px solid var(--primary-blue);
@@ -214,16 +231,73 @@
             cursor: not-allowed;
             transform: none;
         }
+
+        .admin-bar {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 12px;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #856404;
+            font-weight: 700;
+        }
+
+        .admin-bar.visible { display: flex; }
+
+        .reset-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 16px;
+            cursor: pointer;
+            font-family: 'Assistant', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .reset-btn:hover { background: #b02a37; }
+
+        .exit-admin-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 16px;
+            cursor: pointer;
+            font-family: 'Assistant', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .exit-admin-btn:hover { background: #545b62; }
     </style>
 </head>
 <body class="p-6 md:p-12">
 
     <div class="max-w-4xl mx-auto">
+
         <!-- Header -->
         <header class="text-center mb-6">
             <h1 class="scroll-title">אמנת ה-AI הכיתתית</h1>
             <p class="text-xl font-medium text-[#003366]/80 italic">בונים יחד את עקרונות העבודה בעידן החדש</p>
+            <button id="adminLoginBtn" onclick="openAdminModal()" style="margin-top:12px; background:none; border:none; color:rgba(0,51,102,0.25); font-size:0.75rem; cursor:pointer; font-family:'Assistant',sans-serif;">⚙️ ניהול</button>
         </header>
+
+        <!-- Admin Bar -->
+        <div id="adminBar" class="admin-bar">
+            <span>🔓 מצב ניהול פעיל — לחצו על 🗑️ למחיקת תגובה</span>
+            <div style="display:flex; gap:10px;">
+                <button class="reset-btn" onclick="confirmReset()">🗑️ איפוס כל האמנה</button>
+                <button class="exit-admin-btn" onclick="exitAdmin()">יציאה מניהול</button>
+            </div>
+        </div>
 
         <!-- Input Section -->
         <div class="form-section">
@@ -270,20 +344,51 @@
         </div>
     </div>
 
+    <!-- Admin Password Modal -->
+    <div id="adminModal" class="fixed inset-0 bg-[#003366]/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white p-10 rounded-3xl text-center shadow-2xl max-w-sm w-full border-t-8 border-[#003366]">
+            <div class="text-5xl mb-4">🔐</div>
+            <h3 class="text-2xl font-bold text-[#003366] mb-6">כניסה לניהול</h3>
+            <input type="password" id="adminPasswordInput" class="quill-input text-center mb-4" placeholder="הזינו סיסמת ניהול">
+            <div id="adminError" class="text-red-500 text-sm mb-3 hidden">סיסמה שגויה, נסו שוב.</div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="checkAdminPassword()" class="flex-1 bg-[#003366] text-white py-3 rounded-xl font-bold text-lg hover:bg-[#004a94] transition-colors">כניסה</button>
+                <button onclick="closeAdminModal()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold text-lg hover:bg-gray-300 transition-colors">ביטול</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Confirm Modal -->
+    <div id="resetModal" class="fixed inset-0 bg-[#003366]/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white p-10 rounded-3xl text-center shadow-2xl max-w-sm w-full border-t-8 border-red-500">
+            <div class="text-5xl mb-4">⚠️</div>
+            <h3 class="text-2xl font-bold text-[#003366] mb-4">איפוס האמנה</h3>
+            <p class="text-gray-600 mb-8">פעולה זו תמחק את כל החתימות לצמיתות. האם אתם בטוחים?</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="resetAll()" class="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold text-lg hover:bg-red-600 transition-colors">כן, מחק הכל</button>
+                <button onclick="closeResetModal()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold text-lg hover:bg-gray-300 transition-colors">ביטול</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { addDoc, onSnapshot, serverTimestamp, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        const { auth, collectionRef } = window.manifestoApp;
+        const { auth, collectionRef, db } = window.manifestoApp;
 
-        const submitBtn       = document.getElementById('submitBtn');
-        const scrollContent   = document.getElementById('scrollContent');
-        const loadingEl       = document.getElementById('loading');
-        const studentNameInput = document.getElementById('studentName');
+        const ADMIN_PASSWORD = "natalie2025";
+
+        const submitBtn          = document.getElementById('submitBtn');
+        const scrollContent      = document.getElementById('scrollContent');
+        const loadingEl          = document.getElementById('loading');
+        const studentNameInput   = document.getElementById('studentName');
         const manifestoTextInput = document.getElementById('manifestoText');
-        const successOverlay  = document.getElementById('successOverlay');
+        const successOverlay     = document.getElementById('successOverlay');
+        const adminBar           = document.getElementById('adminBar');
 
         let user = null;
+        let isAdmin = false;
 
         signInAnonymously(auth).catch(console.error);
 
@@ -296,7 +401,7 @@
             onSnapshot(collectionRef, (snapshot) => {
                 loadingEl.style.display = 'none';
                 const docs = snapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .map(d => ({ id: d.id, ...d.data() }))
                     .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
                 renderManifesto(docs);
             }, console.error);
@@ -309,6 +414,8 @@
 
         function renderManifesto(items) {
             scrollContent.innerHTML = '';
+            if (isAdmin) scrollContent.classList.add('admin-mode');
+            else scrollContent.classList.remove('admin-mode');
 
             if (items.length === 0) {
                 scrollContent.innerHTML = `
@@ -323,33 +430,93 @@
                 entry.className = 'scroll-entry';
                 entry.innerHTML = `
                     <p class="entry-text">"${item.text}"</p>
-                    <div class="flex justify-between items-center mt-3">
+                    <div class="flex justify-between items-center mt-3" style="flex-wrap:wrap; gap:8px;">
                         <span class="signature">— ${item.name}</span>
-                        <span class="entry-date">${formatDate(item.createdAt)} &nbsp;·&nbsp; #${index + 1}</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span class="entry-date">${formatDate(item.createdAt)} &nbsp;·&nbsp; #${index + 1}</span>
+                            <button class="delete-btn" data-id="${item.id}">🗑️ מחק</button>
+                        </div>
                     </div>`;
                 scrollContent.appendChild(entry);
             });
+
+            // Attach delete listeners
+            scrollContent.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (!confirm('למחוק את החתימה הזו?')) return;
+                    try {
+                        await deleteDoc(doc(db, 'sessions', 'ai-manifesto', 'entries', btn.dataset.id));
+                    } catch(e) { console.error(e); alert('שגיאה במחיקה'); }
+                });
+            });
         }
 
+        // Admin functions
+        window.openAdminModal = () => {
+            document.getElementById('adminModal').classList.remove('hidden');
+            document.getElementById('adminModal').classList.add('flex');
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('adminError').classList.add('hidden');
+            setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
+        };
+
+        window.closeAdminModal = () => {
+            document.getElementById('adminModal').classList.add('hidden');
+            document.getElementById('adminModal').classList.remove('flex');
+        };
+
+        window.checkAdminPassword = () => {
+            const input = document.getElementById('adminPasswordInput').value;
+            if (input === ADMIN_PASSWORD) {
+                isAdmin = true;
+                adminBar.classList.add('visible');
+                scrollContent.classList.add('admin-mode');
+                scrollContent.querySelectorAll('.delete-btn').forEach(b => b.style.display = 'inline-block');
+                closeAdminModal();
+            } else {
+                document.getElementById('adminError').classList.remove('hidden');
+            }
+        };
+
+        window.exitAdmin = () => {
+            isAdmin = false;
+            adminBar.classList.remove('visible');
+            scrollContent.classList.remove('admin-mode');
+        };
+
+        window.confirmReset = () => {
+            document.getElementById('resetModal').classList.remove('hidden');
+            document.getElementById('resetModal').classList.add('flex');
+        };
+
+        window.closeResetModal = () => {
+            document.getElementById('resetModal').classList.add('hidden');
+            document.getElementById('resetModal').classList.remove('flex');
+        };
+
+        window.resetAll = async () => {
+            closeResetModal();
+            try {
+                const snapshot = await getDocs(collectionRef);
+                const deletes = snapshot.docs.map(d => deleteDoc(doc(db, 'sessions', 'ai-manifesto', 'entries', d.id)));
+                await Promise.all(deletes);
+            } catch(e) { console.error(e); alert('שגיאה באיפוס'); }
+        };
+
+        // Enter key on password field
+        document.getElementById('adminPasswordInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') window.checkAdminPassword();
+        });
+
+        // Submit
         submitBtn.addEventListener('click', async () => {
             const name = studentNameInput.value.trim();
             const text = manifestoTextInput.value.trim();
-
-            if (!name || !text) {
-                alert('אנא מלאו את כל השדות לפני החתימה.');
-                return;
-            }
-
+            if (!name || !text) { alert('אנא מלאו את כל השדות לפני החתימה.'); return; }
             submitBtn.disabled = true;
             submitBtn.innerText = 'חותם... ✒️';
-
             try {
-                await addDoc(collectionRef, {
-                    name,
-                    text,
-                    uid: user.uid,
-                    createdAt: serverTimestamp()
-                });
+                await addDoc(collectionRef, { name, text, uid: user.uid, createdAt: serverTimestamp() });
                 studentNameInput.value = '';
                 manifestoTextInput.value = '';
                 successOverlay.classList.remove('hidden');
